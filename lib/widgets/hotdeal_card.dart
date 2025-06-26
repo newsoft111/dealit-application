@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:couphago_frontend/models/hotdeal.dart';
-import 'package:couphago_frontend/screens/hotdeal_detail_screen.dart';
+import 'package:dealit_app/models/hotdeal.dart';
+import 'package:dealit_app/screens/hotdeal_detail_screen.dart';
 
 class HotdealCard extends StatelessWidget {
   final Hotdeal hotdeal;
@@ -28,7 +28,9 @@ class HotdealCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildThumbnail(),
-                _buildProductInfo(),
+                Expanded(
+                  child: _buildProductInfo(),
+                ),
               ],
             ),
             if (hotdeal.isSuperHotdeal) _buildSuperHotdealBadge(),
@@ -42,12 +44,16 @@ class HotdealCard extends StatelessWidget {
   Widget _buildThumbnail() {
     if (hotdeal.thumbnail.isEmpty) return const SizedBox.shrink();
     
+    final fullImageUrl = hotdeal.thumbnail.startsWith('http') 
+        ? hotdeal.thumbnail 
+        : 'https://cdn.dealit.shop${hotdeal.thumbnail}';
+    
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
       child: AspectRatio(
         aspectRatio: 1,
         child: CachedNetworkImage(
-          imageUrl: hotdeal.thumbnail,
+          imageUrl: fullImageUrl,
           fit: BoxFit.cover,
           placeholder: (context, url) => Container(
             color: Colors.grey[200],
@@ -67,15 +73,18 @@ class HotdealCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            hotdeal.productName,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+          Expanded(
+            child: Text(
+              hotdeal.productName,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 8),
           Text(
@@ -86,16 +95,17 @@ class HotdealCard extends StatelessWidget {
               color: Colors.red,
             ),
           ),
-          if (hotdeal.cardDiscountRate > 0) ...[
-            const SizedBox(height: 4),
+          const SizedBox(height: 4),
+          if (hotdeal.cardDiscountRate != null && hotdeal.cardDiscountRate! > 0)
             Text(
               '최대 ${hotdeal.cardDiscountRate}% 카드할인',
               style: const TextStyle(
                 fontSize: 12,
                 color: Colors.blue,
               ),
-            ),
-          ],
+            )
+          else
+            const SizedBox(height: 16),
         ],
       ),
     );

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:couphago_frontend/models/hotdeal.dart';
-import 'package:couphago_frontend/services/api_service.dart';
+import 'package:dealit_app/models/hotdeal.dart';
+import 'package:dealit_app/services/api_service.dart';
 
 class HotdealProvider with ChangeNotifier {
   List<Hotdeal> _hotdeals = [];

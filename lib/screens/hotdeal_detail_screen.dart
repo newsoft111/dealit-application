@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:couphago_frontend/models/hotdeal.dart';
-import 'package:couphago_frontend/services/api_service.dart';
+import 'package:dealit_app/models/hotdeal.dart';
+import 'package:dealit_app/services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class HotdealDetailScreen extends StatefulWidget {
@@ -34,6 +34,7 @@ class _HotdealDetailScreenState extends State<HotdealDetailScreen> {
         loading = false;
       });
     } catch (e) {
+      print('Error fetching hotdeal detail: $e');
       setState(() {
         error = true;
         loading = false;
@@ -51,7 +52,21 @@ class _HotdealDetailScreenState extends State<HotdealDetailScreen> {
     if (error || hotdeal == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('상세 정보를 불러올 수 없습니다.')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('상세 정보를 불러올 수 없습니다.'),
+              const SizedBox(height: 16),
+              Text('핫딜 ID: ${widget.hotdealId}'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchDetail,
+                child: const Text('다시 시도'),
+              ),
+            ],
+          ),
+        ),
       );
     }
     return Scaffold(
@@ -63,7 +78,9 @@ class _HotdealDetailScreenState extends State<HotdealDetailScreen> {
         children: [
           if (hotdeal!.thumbnail.isNotEmpty)
             CachedNetworkImage(
-              imageUrl: hotdeal!.thumbnail,
+              imageUrl: hotdeal!.thumbnail.startsWith('http') 
+                  ? hotdeal!.thumbnail 
+                  : 'https://cdn.dealit.shop${hotdeal!.thumbnail}',
               height: 200,
               fit: BoxFit.cover,
             ),
@@ -74,7 +91,7 @@ class _HotdealDetailScreenState extends State<HotdealDetailScreen> {
           ),
           const SizedBox(height: 8),
           Text('현재가: ${hotdeal!.salePrice}원', style: const TextStyle(fontSize: 18, color: Colors.red)),
-          if (hotdeal!.cardDiscountRate > 0)
+          if (hotdeal!.cardDiscountRate != null && hotdeal!.cardDiscountRate! > 0)
             Text('최대 ${hotdeal!.cardDiscountRate}% 카드할인', style: const TextStyle(color: Colors.blue)),
           const SizedBox(height: 16),
           Text('상품 ID: ${hotdeal!.itemId}'),

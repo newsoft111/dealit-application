@@ -2,7 +2,7 @@ class Hotdeal {
   final int id;
   final int basePrice;
   final int salePrice;
-  final int cardDiscountRate;
+  final int? cardDiscountRate;
   final String thumbnail;
   final String productName;
   final String itemId;
@@ -18,7 +18,7 @@ class Hotdeal {
     required this.id,
     required this.basePrice,
     required this.salePrice,
-    required this.cardDiscountRate,
+    this.cardDiscountRate,
     required this.thumbnail,
     required this.productName,
     required this.itemId,
@@ -33,20 +33,20 @@ class Hotdeal {
 
   factory Hotdeal.fromJson(Map<String, dynamic> json) {
     return Hotdeal(
-      id: json['id'],
-      basePrice: json['basePrice'],
-      salePrice: json['salePrice'],
+      id: json['id'] ?? 0,
+      basePrice: json['basePrice'] ?? 0,
+      salePrice: json['salePrice'] ?? 0,
       cardDiscountRate: json['cardDiscountRate'],
       thumbnail: json['thumbnail'] ?? '',
-      productName: json['productName'],
-      itemId: json['itemId'],
-      externalProductId: json['externalProductId'],
-      vendorItemId: json['vendorItemId'],
-      outOfStock: json['outOfStock'],
-      isActive: json['isActive'],
-      productUrl: json['productUrl'],
-      categoryId: json['categoryId'],
-      isSuperHotdeal: json['isSuperHotdeal'],
+      productName: json['productName'] ?? '',
+      itemId: json['itemId'] ?? '',
+      externalProductId: json['externalProductId'] ?? '',
+      vendorItemId: json['vendorItemId'] ?? '',
+      outOfStock: json['outOfStock'] ?? false,
+      isActive: json['isActive'] ?? false,
+      productUrl: json['productUrl'] ?? '',
+      categoryId: json['categoryId'] ?? 0,
+      isSuperHotdeal: json['isSuperHotdeal'] ?? false,
     );
   }
 }

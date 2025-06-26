@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:couphago_frontend/providers/hotdeal_provider.dart';
-import 'package:couphago_frontend/providers/category_provider.dart';
-import 'package:couphago_frontend/widgets/hotdeal_card.dart';
-import 'package:couphago_frontend/widgets/drawer_widget.dart';
+import 'package:dealit_app/providers/hotdeal_provider.dart';
+import 'package:dealit_app/providers/category_provider.dart';
+import 'package:dealit_app/widgets/hotdeal_card.dart';
+import 'package:dealit_app/widgets/drawer_widget.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.75,
+                childAspectRatio: 0.65,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),

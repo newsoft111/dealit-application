@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:couphago_frontend/providers/hotdeal_provider.dart';
-import 'package:couphago_frontend/providers/category_provider.dart';
-import 'package:couphago_frontend/screens/home_screen.dart';
+import 'package:dealit_app/providers/hotdeal_provider.dart';
+import 'package:dealit_app/providers/category_provider.dart';
+import 'package:dealit_app/screens/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
