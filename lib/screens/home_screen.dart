@@ -4,6 +4,7 @@ import 'package:dealit_app/providers/hotdeal_provider.dart';
 import 'package:dealit_app/providers/category_provider.dart';
 import 'package:dealit_app/widgets/hotdeal_card.dart';
 import 'package:dealit_app/widgets/drawer_widget.dart';
+import 'package:dealit_app/widgets/notification_permission_widget.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -84,18 +85,27 @@ class _HomeScreenState extends State<HomeScreen> {
               await hotdealProvider.fetchHotdeals();
               _refreshController.loadComplete();
             },
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
-                childAspectRatio: 0.6,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-              ),
-              itemCount: hotdealProvider.hotdeals.length,
-              itemBuilder: (context, index) {
-                return HotdealCard(hotdeal: hotdealProvider.hotdeals[index]);
-              },
+            child: Column(
+              children: [
+                // 알림 권한 위젯
+                const NotificationPermissionWidget(),
+                // 핫딜 목록
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 200,
+                      childAspectRatio: 0.6,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: hotdealProvider.hotdeals.length,
+                    itemBuilder: (context, index) {
+                      return HotdealCard(hotdeal: hotdealProvider.hotdeals[index]);
+                    },
+                  ),
+                ),
+              ],
             ),
           );
         },

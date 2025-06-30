@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "619722618004",
+    "project_id": "dealit-de24c",
+    "storage_bucket": "dealit-de24c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:619722618004:android:fb5f95267987455bfaf081",
+        "android_client_info": {
+          "package_name": "shop.dealit.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD89qYV4mvoo4YeuvlCw1saiiQj5aM44OU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

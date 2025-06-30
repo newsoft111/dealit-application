@@ -52,7 +52,6 @@ class ApiService {
     try {
       final response = await http.get(uri);
       print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -100,6 +99,69 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Network error: $e');
+    }
+  }
+
+  // FCM 토큰을 서버로 전송
+  static Future<bool> sendFCMToken(String fcmToken) async {
+    final uri = Uri.parse('$baseUrl/fcm-token');
+    
+    try {
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'fcmToken': fcmToken,
+          'platform': 'android', // 또는 'ios'
+          'appVersion': '1.0.0', // 앱 버전 정보
+        }),
+      );
+      
+      print('FCM 토큰 전송 응답: ${response.statusCode}');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        print('FCM 토큰 전송 성공: ${data['message']}');
+        return true;
+      } else {
+        print('FCM 토큰 전송 실패: ${response.statusCode} - ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('FCM 토큰 전송 오류: $e');
+      return false;
+    }
+  }
+
+  // FCM 토큰 삭제 (앱 삭제 시 또는 알림 비활성화 시)
+  static Future<bool> deleteFCMToken(String fcmToken) async {
+    final uri = Uri.parse('$baseUrl/fcm-token');
+    
+    try {
+      final response = await http.delete(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'fcmToken': fcmToken,
+        }),
+      );
+      
+      print('FCM 토큰 삭제 응답: ${response.statusCode}');
+      
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        print('FCM 토큰 삭제 성공');
+        return true;
+      } else {
+        print('FCM 토큰 삭제 실패: ${response.statusCode} - ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('FCM 토큰 삭제 오류: $e');
+      return false;
     }
   }
 }
