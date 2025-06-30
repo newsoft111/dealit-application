@@ -73,7 +73,6 @@ class HotdealCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Expanded(
             child: Text(
@@ -82,13 +81,13 @@ class HotdealCard extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
-              maxLines: 3,
+              maxLines: 5,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '현재가 ${hotdeal.salePrice.toStringAsFixed(0)}원',
+            '현재가 ${hotdeal.salePrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -103,9 +102,7 @@ class HotdealCard extends StatelessWidget {
                 fontSize: 12,
                 color: Colors.blue,
               ),
-            )
-          else
-            const SizedBox(height: 16),
+            ),
         ],
       ),
     );

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dealit_app/models/hotdeal.dart';
 import 'package:dealit_app/models/category.dart' as models;
+import 'package:dealit_app/models/price_chart.dart';
 
 class ApiService {
   static const String baseUrl = 'https://api.dealit.shop/api/v1'; // 실제 API 도메인으로 변경
@@ -43,8 +44,8 @@ class ApiService {
     }
   }
 
-  static Future<Hotdeal> fetchHotdeal(int hotdealId) async {
-    final uri = Uri.parse('$baseUrl/hotdeals?hotdeal_id=$hotdealId');
+  static Future<Map<String, dynamic>> fetchHotdeal(int hotdealId) async {
+    final uri = Uri.parse('$baseUrl/hotdeal?hotdeal_id=$hotdealId');
     
     print('Fetching hotdeal detail from: $uri');
     
@@ -56,17 +57,24 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         
-        // API가 핫딜 목록을 반환하므로 해당 ID의 핫딜을 찾음
-        if (data['hotdeals'] != null) {
-          final hotdeals = data['hotdeals'] as List;
-          final targetHotdeal = hotdeals.firstWhere(
-            (hotdeal) => hotdeal['id'] == hotdealId,
-            orElse: () => throw Exception('Hotdeal with ID $hotdealId not found'),
-          );
-          return Hotdeal.fromJson(targetHotdeal);
+        // API가 단일 핫딜 객체를 반환
+        if (data['hotdeal'] != null) {
+          final hotdeal = Hotdeal.fromJson(data['hotdeal']);
+          
+          // 가격 차트 데이터 파싱
+          List<PriceChartPoint> priceChart = [];
+          if (data['priceChart'] != null) {
+            priceChart = (data['priceChart'] as List)
+                .map((json) => PriceChartPoint.fromJson(json))
+                .toList();
+          }
+          
+          return {
+            'hotdeal': hotdeal,
+            'priceChart': priceChart,
+          };
         } else {
-          // 단일 핫딜 응답인 경우
-          return Hotdeal.fromJson(data);
+          throw Exception('Hotdeal data not found in response');
         }
       } else {
         throw Exception('Failed to load hotdeal: ${response.statusCode} - ${response.body}');

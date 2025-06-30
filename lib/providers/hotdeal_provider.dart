@@ -14,6 +14,7 @@ class HotdealProvider with ChangeNotifier {
   bool get loading => _loading;
   bool get error => _error;
   bool get hasMorePages => _currentPage < _totalPages;
+  int? get currentCategoryId => _currentCategoryId;
 
   Future<void> fetchHotdeals({int? categoryId, bool refresh = false}) async {
     if (refresh) {
