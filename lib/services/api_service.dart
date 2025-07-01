@@ -1,11 +1,21 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:dealit_app/models/hotdeal.dart';
 import 'package:dealit_app/models/category.dart' as models;
 import 'package:dealit_app/models/price_chart.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://api.dealit.shop/api/v1'; // 실제 API 도메인으로 변경
+  // 개발/배포 환경에 따라 API URL 설정
+  static String get baseUrl {
+    if (kReleaseMode) {
+      // 배포 버전
+      return 'https://api.dealit.shop/api/v1';
+    } else {
+      // 개발 버전
+      return 'http://192.168.1.234:8000/api/v1'; // 또는 실제 개발 서버 포트
+    }
+  }
 
   static Future<Map<String, dynamic>> fetchHotdeals({
     int? categoryId,
