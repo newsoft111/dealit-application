@@ -16,7 +16,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // FCM 서비스 초기화
+  // FCM 서비스 초기화 (권한 요청 포함)
   await FCMService().initialize();
   
   // 백그라운드 메시지 핸들러 설정

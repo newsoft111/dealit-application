@@ -9,17 +9,22 @@ class FCMService {
   factory FCMService() => _instance;
   FCMService._internal();
 
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  late final FirebaseMessaging _firebaseMessaging;
   String? _fcmToken;
 
   // FCM 초기화
   Future<void> initialize() async {
     try {
+      print('FCM 서비스 초기화 시작...');
+      
       // Firebase 초기화
       await Firebase.initializeApp();
+      print('Firebase 초기화 완료');
       
+      _firebaseMessaging = FirebaseMessaging.instance;
       // 알림 권한 요청
       bool hasPermission = await _requestNotificationPermission();
+      print('알림 권한 상태: $hasPermission');
       
       if (hasPermission) {
         // FCM 토큰 가져오기
@@ -48,12 +53,19 @@ class FCMService {
 
   // 알림 권한 요청
   Future<bool> _requestNotificationPermission() async {
-    // Android 13 이상에서는 알림 권한을 별도로 요청해야 함
-    if (await Permission.notification.isDenied) {
-      PermissionStatus status = await Permission.notification.request();
-      return status.isGranted;
+    try {
+      // Android 13 이상에서는 알림 권한을 별도로 요청해야 함
+      if (await Permission.notification.isDenied) {
+        print('알림 권한 요청 중...');
+        PermissionStatus status = await Permission.notification.request();
+        print('알림 권한 상태: $status');
+        return status.isGranted;
+      }
+      return await Permission.notification.isGranted;
+    } catch (e) {
+      print('알림 권한 요청 오류: $e');
+      return false;
     }
-    return true;
   }
 
   // FCM 토큰 가져오기
