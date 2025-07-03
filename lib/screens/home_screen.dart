@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final RefreshController _refreshController = RefreshController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String? _selectedCategoryName;
+  bool _showNotificationWidget = true;
 
   @override
   void initState() {
@@ -31,6 +32,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onCategorySelected(String? categoryName) {
     setState(() {
       _selectedCategoryName = categoryName;
+    });
+  }
+
+  void _dismissNotificationWidget() {
+    setState(() {
+      _showNotificationWidget = false;
     });
   }
 
@@ -88,7 +95,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 // 알림 권한 위젯
-                const NotificationPermissionWidget(),
+                if (_showNotificationWidget)
+                  NotificationPermissionWidget(
+                    onDismiss: _dismissNotificationWidget,
+                  ),
                 // 핫딜 목록
                 Expanded(
                   child: GridView.builder(

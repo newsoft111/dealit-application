@@ -3,7 +3,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:dealit_app/services/fcm_service.dart';
 
 class NotificationPermissionWidget extends StatefulWidget {
-  const NotificationPermissionWidget({super.key});
+  final VoidCallback? onDismiss;
+  
+  const NotificationPermissionWidget({super.key, this.onDismiss});
 
   @override
   State<NotificationPermissionWidget> createState() => _NotificationPermissionWidgetState();
@@ -44,7 +46,7 @@ class _NotificationPermissionWidgetState extends State<NotificationPermissionWid
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('알림이 활성화되었습니다!'),
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.blue,
             ),
           );
         }
@@ -105,13 +107,13 @@ class _NotificationPermissionWidgetState extends State<NotificationPermissionWid
         padding: const EdgeInsets.all(16),
         margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.green[50],
+          color: Colors.blue[50],
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.green[200]!),
+          border: Border.all(color: Colors.blue[200]!),
         ),
         child: Row(
           children: [
-            Icon(Icons.notifications_active, color: Colors.green[600]),
+            Icon(Icons.notifications_active, color: Colors.blue[600]),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -121,7 +123,7 @@ class _NotificationPermissionWidgetState extends State<NotificationPermissionWid
                     '알림이 활성화되어 있습니다',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.green[800],
+                      color: Colors.blue[800],
                     ),
                   ),
                   const Text(
@@ -131,6 +133,14 @@ class _NotificationPermissionWidgetState extends State<NotificationPermissionWid
                 ],
               ),
             ),
+            if (widget.onDismiss != null)
+              IconButton(
+                onPressed: widget.onDismiss,
+                icon: const Icon(Icons.close, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                color: Colors.blue[600],
+              ),
           ],
         ),
       );
@@ -140,26 +150,34 @@ class _NotificationPermissionWidgetState extends State<NotificationPermissionWid
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.orange[50],
+        color: Colors.red[50],
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange[200]!),
+        border: Border.all(color: Colors.red[200]!),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.notifications_off, color: Colors.orange[600]),
+              Icon(Icons.notifications_off, color: Colors.red[600]),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   '알림 권한이 필요합니다',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange[800],
+                    color: Colors.red[800],
                   ),
                 ),
               ),
+              if (widget.onDismiss != null)
+                IconButton(
+                  onPressed: widget.onDismiss,
+                  icon: const Icon(Icons.close, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  color: Colors.red[600],
+                ),
             ],
           ),
           const SizedBox(height: 8),
@@ -174,7 +192,7 @@ class _NotificationPermissionWidgetState extends State<NotificationPermissionWid
                 child: ElevatedButton(
                   onPressed: _requestPermission,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[600],
+                    backgroundColor: Colors.blue[600],
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('알림 허용'),

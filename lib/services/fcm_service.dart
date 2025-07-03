@@ -3,6 +3,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dealit_app/services/api_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/material.dart';
+import 'package:dealit_app/screens/hotdeal_detail_screen.dart';
 
 class FCMService {
   static final FCMService _instance = FCMService._internal();
@@ -10,7 +13,14 @@ class FCMService {
   FCMService._internal();
 
   late final FirebaseMessaging _firebaseMessaging;
+  late final FlutterLocalNotificationsPlugin _localNotifications;
   String? _fcmToken;
+  GlobalKey<NavigatorState>? _navigatorKey;
+
+  // 네비게이터 키 설정
+  void setNavigatorKey(GlobalKey<NavigatorState> navigatorKey) {
+    _navigatorKey = navigatorKey;
+  }
 
   // FCM 초기화
   Future<void> initialize() async {
@@ -20,6 +30,9 @@ class FCMService {
       // Firebase 초기화
       await Firebase.initializeApp();
       print('Firebase 초기화 완료');
+      
+      // 로컬 알림 플러그인 초기화
+      await _initializeLocalNotifications();
       
       _firebaseMessaging = FirebaseMessaging.instance;
       // 알림 권한 요청
@@ -36,10 +49,7 @@ class FCMService {
         // 포그라운드 메시지 핸들러 설정
         FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
         
-        // 백그라운드 메시지 핸들러 설정
-        FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
-        
-        // 앱이 종료된 상태에서 알림을 탭했을 때 핸들러 설정
+        // 앱이 백그라운드에서 포그라운드로 올 때 핸들러 설정
         FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
         
         print('FCM 초기화 완료');
@@ -49,6 +59,52 @@ class FCMService {
     } catch (e) {
       print('FCM 초기화 오류: $e');
     }
+  }
+
+  // 로컬 알림 플러그인 초기화
+  Future<void> _initializeLocalNotifications() async {
+    _localNotifications = FlutterLocalNotificationsPlugin();
+    
+    // Android 설정
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    
+    // iOS 설정
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+    
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
+    
+    await _localNotifications.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: _onNotificationTapped,
+    );
+    
+    // Android 알림 채널 생성
+    await _createNotificationChannel();
+  }
+
+  // Android 알림 채널 생성
+  Future<void> _createNotificationChannel() async {
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel',
+      'High Importance Notifications',
+      description: 'This channel is used for important notifications.',
+      importance: Importance.high,
+    );
+    
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
   }
 
   // 알림 권한 요청
@@ -114,24 +170,141 @@ class FCMService {
   // 포그라운드 메시지 핸들러
   void _handleForegroundMessage(RemoteMessage message) {
     print('포그라운드 메시지 수신: ${message.notification?.title}');
+    print('메시지 데이터: ${message.data}');
     
-    // TODO: 로컬 알림 표시 또는 UI 업데이트
-    // 예: showLocalNotification(message);
+    // 로컬 알림 표시
+    _showLocalNotification(message);
   }
 
-  // 백그라운드 메시지 핸들러 (top-level function이어야 함)
-  static Future<void> _handleBackgroundMessage(RemoteMessage message) async {
-    print('백그라운드 메시지 수신: ${message.notification?.title}');
+  // 로컬 알림 표시
+  Future<void> _showLocalNotification(RemoteMessage message) async {
+    try {
+      const AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+        'high_importance_channel',
+        'High Importance Notifications',
+        channelDescription: 'This channel is used for important notifications.',
+        importance: Importance.high,
+        priority: Priority.high,
+        showWhen: true,
+      );
+      
+      const DarwinNotificationDetails iOSPlatformChannelSpecifics =
+          DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+      
+      const NotificationDetails platformChannelSpecifics =
+          NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics,
+      );
+      
+      await _localNotifications.show(
+        message.hashCode,
+        message.notification?.title ?? '새 알림',
+        message.notification?.body ?? '',
+        platformChannelSpecifics,
+        payload: message.data.toString(),
+      );
+      
+      print('로컬 알림이 표시되었습니다: ${message.notification?.title}');
+    } catch (e) {
+      print('로컬 알림 표시 오류: $e');
+    }
+  }
+
+  // 알림 탭 핸들러
+  void _onNotificationTapped(NotificationResponse response) {
+    print('알림이 탭되었습니다: ${response.payload}');
     
-    // TODO: 백그라운드에서 처리할 작업
+    // 페이로드에서 핫딜 ID 추출
+    if (response.payload != null) {
+      _handleNotificationPayload(response.payload!);
+    }
+  }
+
+  // 메시지 데이터에서 핫딜 ID 추출 및 네비게이션
+  void _handleNotificationPayload(String payload) {
+    try {
+      // 페이로드 문자열을 Map으로 파싱
+      // 예: "{type: hotdeal, hotdeal_id: 123}" 형태
+      final data = _parsePayload(payload);
+      
+      if (data['type'] == 'hotdeal' && data['hotdeal_id'] != null) {
+        final hotdealId = data['hotdeal_id'];
+        print('핫딜 상세 페이지로 이동: $hotdealId');
+        
+        // 네비게이션 실행
+        _navigateToHotdealDetail(hotdealId);
+      }
+    } catch (e) {
+      print('페이로드 처리 오류: $e');
+    }
+  }
+
+  // 페이로드 문자열을 Map으로 파싱
+  Map<String, dynamic> _parsePayload(String payload) {
+    // "{type: hotdeal, hotdeal_id: 123}" 형태를 파싱
+    final Map<String, dynamic> result = {};
+    
+    // 중괄호 제거
+    String cleanPayload = payload.replaceAll('{', '').replaceAll('}', '');
+    
+    // 쉼표로 분리
+    final pairs = cleanPayload.split(',');
+    
+    for (String pair in pairs) {
+      final keyValue = pair.trim().split(':');
+      if (keyValue.length == 2) {
+        final key = keyValue[0].trim();
+        final value = keyValue[1].trim();
+        
+        // 따옴표 제거
+        final cleanValue = value.replaceAll('"', '').replaceAll("'", '');
+        result[key] = cleanValue;
+      }
+    }
+    
+    return result;
+  }
+
+  // 핫딜 상세 페이지로 네비게이션
+  void _navigateToHotdealDetail(String hotdealId) {
+    if (_navigatorKey?.currentState != null) {
+      // String을 int로 변환
+      final int? id = int.tryParse(hotdealId);
+      if (id != null) {
+        _navigatorKey!.currentState!.push(
+          MaterialPageRoute(
+            builder: (context) => HotdealDetailScreen(hotdealId: id),
+          ),
+        );
+      } else {
+        print('유효하지 않은 핫딜 ID: $hotdealId');
+      }
+    } else {
+      print('네비게이터 키가 설정되지 않았습니다.');
+    }
   }
 
   // 앱이 종료된 상태에서 알림을 탭했을 때 핸들러
   void _handleMessageOpenedApp(RemoteMessage message) {
     print('알림을 탭하여 앱이 열렸습니다: ${message.notification?.title}');
+    print('메시지 데이터: ${message.data}');
     
-    // TODO: 특정 화면으로 이동하거나 데이터 처리
-    // 예: Navigator.pushNamed(context, '/detail', arguments: message.data);
+    // 메시지 데이터에서 핫딜 ID 추출 및 네비게이션
+    if (message.data.isNotEmpty) {
+      if (message.data['type'] == 'hotdeal' && message.data['hotdeal_id'] != null) {
+        final hotdealId = message.data['hotdeal_id'];
+        print('핫딜 상세 페이지로 이동: $hotdealId');
+        
+        // 네비게이션 실행
+        _navigateToHotdealDetail(hotdealId);
+      }
+    }
   }
 
   // 저장된 FCM 토큰 가져오기
