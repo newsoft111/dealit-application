@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dealit_app/providers/hotdeal_provider.dart';
 import 'package:dealit_app/providers/category_provider.dart';
+import 'package:dealit_app/providers/sse_provider.dart';
 import 'package:dealit_app/screens/home_screen.dart';
 import 'package:dealit_app/services/fcm_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -93,7 +94,18 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
-        ChangeNotifierProvider(create: (_) => HotdealProvider()),
+        ChangeNotifierProvider(create: (_) => SSEProvider()),
+        ChangeNotifierProxyProvider<SSEProvider, HotdealProvider>(
+          create: (context) => HotdealProvider(),
+          update: (context, sseProvider, hotdealProvider) {
+            if (hotdealProvider == null) {
+              hotdealProvider = HotdealProvider();
+            }
+            // SSE Provider와 HotdealProvider 연결
+            sseProvider.setHotdealCallback(hotdealProvider.addNewHotdealFromSSE);
+            return hotdealProvider;
+          },
+        ),
       ],
       child: MaterialApp(
         navigatorKey: navigatorKey,

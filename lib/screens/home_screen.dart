@@ -5,7 +5,7 @@ import 'package:dealit_app/providers/category_provider.dart';
 import 'package:dealit_app/widgets/hotdeal_card.dart';
 import 'package:dealit_app/widgets/drawer_widget.dart';
 import 'package:dealit_app/widgets/notification_permission_widget.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:dealit_app/providers/sse_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,9 +15,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final RefreshController _refreshController = RefreshController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String? _selectedCategoryName;
+  int? _selectedCategoryId;
   bool _showNotificationWidget = true;
 
   @override
@@ -25,13 +25,17 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CategoryProvider>().fetchCategories();
-      context.read<HotdealProvider>().fetchHotdeals();
+      context.read<HotdealProvider>().fetchHotdeals(categoryId: null);
+      
+      // SSE 연결 시작 (Next.js와 동일)
+      context.read<SSEProvider>().startSSEConnection();
     });
   }
 
-  void _onCategorySelected(String? categoryName) {
+  void _onCategorySelected(String? categoryName, int? categoryId) {
     setState(() {
       _selectedCategoryName = categoryName;
+      _selectedCategoryId = categoryId;
     });
   }
 
@@ -80,42 +84,78 @@ class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return SmartRefresher(
-            controller: _refreshController,
-            enablePullDown: true,
-            enablePullUp: hotdealProvider.hasMorePages,
+          return RefreshIndicator(
             onRefresh: () async {
-              await hotdealProvider.fetchHotdeals(categoryId: hotdealProvider.currentCategoryId, refresh: true);
-              _refreshController.refreshCompleted();
+              print('새로고침 시작 - 카테고리 이름: $_selectedCategoryName, 카테고리 ID: $_selectedCategoryId');
+              try {
+                // 슈퍼핫딜인 경우 categoryId를 null로 전달
+                int? categoryId = _selectedCategoryName == '슈퍼핫딜' ? null : _selectedCategoryId;
+                await hotdealProvider.fetchHotdeals(categoryId: categoryId, refresh: true);
+                print('새로고침 완료');
+              } catch (e) {
+                print('새로고침 오류: $e');
+              }
             },
-            onLoading: () async {
-              await hotdealProvider.fetchHotdeals();
-              _refreshController.loadComplete();
-            },
-            child: Column(
-              children: [
-                // 알림 권한 위젯
-                if (_showNotificationWidget)
-                  NotificationPermissionWidget(
-                    onDismiss: _dismissNotificationWidget,
-                  ),
-                // 핫딜 목록
-                Expanded(
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 200,
-                      childAspectRatio: 0.6,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification scrollInfo) {
+                // 스크롤이 맨 아래에 도달했는지 확인
+                if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 100) {
+                  print('스크롤 위치: ${scrollInfo.metrics.pixels}/${scrollInfo.metrics.maxScrollExtent}');
+                  print('hasMorePages: ${hotdealProvider.hasMorePages}, loading: ${hotdealProvider.loading}');
+                  
+                  if (hotdealProvider.hasMorePages && !hotdealProvider.loading) {
+                    print('무한 스크롤 트리거 - 현재 핫딜 수: ${hotdealProvider.hotdeals.length}');
+                    print('현재 카테고리: $_selectedCategoryName, 카테고리 ID: $_selectedCategoryId');
+                    // 슈퍼핫딜인 경우 categoryId를 null로 전달
+                    int? categoryId = _selectedCategoryName == '슈퍼핫딜' ? null : _selectedCategoryId;
+                    hotdealProvider.fetchHotdeals(categoryId: categoryId);
+                  }
+                }
+                return false;
+              },
+              child: CustomScrollView(
+                slivers: [
+                  // 알림 권한 위젯
+                  if (_showNotificationWidget)
+                    SliverToBoxAdapter(
+                      child: NotificationPermissionWidget(
+                        onDismiss: _dismissNotificationWidget,
+                      ),
                     ),
-                    itemCount: hotdealProvider.hotdeals.length,
-                    itemBuilder: (context, index) {
-                      return HotdealCard(hotdeal: hotdealProvider.hotdeals[index]);
-                    },
-                  ),
-                ),
-              ],
+                  // 핫딜 목록
+                  hotdealProvider.hotdeals.isEmpty && !hotdealProvider.loading
+                      ? const SliverFillRemaining(
+                          child: Center(
+                            child: Text('표시할 핫딜이 없습니다.'),
+                          ),
+                        )
+                      : SliverPadding(
+                          padding: const EdgeInsets.all(16),
+                          sliver: SliverGrid(
+                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 200,
+                              childAspectRatio: 0.6,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                if (index == hotdealProvider.hotdeals.length) {
+                                  return const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+                                }
+                                return HotdealCard(hotdeal: hotdealProvider.hotdeals[index]);
+                              },
+                              childCount: hotdealProvider.hotdeals.length + (hotdealProvider.hasMorePages ? 1 : 0),
+                            ),
+                          ),
+                        ),
+                ],
+              ),
             ),
           );
         },
@@ -125,7 +165,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _refreshController.dispose();
+    // SSE 연결 해제
+    context.read<SSEProvider>().stopSSEConnection();
     super.dispose();
   }
 }

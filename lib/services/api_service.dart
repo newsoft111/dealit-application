@@ -32,6 +32,8 @@ class ApiService {
     final uri = Uri.parse('$baseUrl/hotdeals').replace(queryParameters: queryParameters);
     
     print('Fetching hotdeals from: $uri');
+    print('Category ID: $categoryId (null = 슈퍼핫딜)');
+    print('Page: $page, Per Page: $perPage');
     
     try {
       final response = await http.get(uri);

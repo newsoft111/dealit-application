@@ -5,7 +5,7 @@ import 'package:dealit_app/providers/hotdeal_provider.dart';
 import 'package:dealit_app/models/category.dart' as models;
 
 class DrawerWidget extends StatelessWidget {
-  final void Function(String?)? onCategorySelected;
+  final void Function(String?, int?)? onCategorySelected;
   const DrawerWidget({super.key, this.onCategorySelected});
 
   @override
@@ -37,7 +37,7 @@ class DrawerWidget extends StatelessWidget {
                   onTap: () {
                     context.read<HotdealProvider>().fetchHotdeals(categoryId: null, refresh: true);
                     Navigator.pop(context);
-                    if (onCategorySelected != null) onCategorySelected!('슈퍼핫딜');
+                    if (onCategorySelected != null) onCategorySelected!('슈퍼핫딜', null);
                   },
                 ),
                 if (categoryProvider.loading)
@@ -56,7 +56,7 @@ class DrawerWidget extends StatelessWidget {
                     onTap: () {
                       context.read<HotdealProvider>().fetchHotdeals(categoryId: category.id, refresh: true);
                       Navigator.pop(context);
-                      if (onCategorySelected != null) onCategorySelected!(category.categoryName);
+                      if (onCategorySelected != null) onCategorySelected!(category.categoryName, category.id);
                     },
                   )),
               ],

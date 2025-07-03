@@ -11,7 +11,7 @@ class Hotdeal {
   final bool outOfStock;
   final bool isActive;
   final String productUrl;
-  final int categoryId;
+  final int? categoryId;
   final bool isSuperHotdeal;
 
   Hotdeal({
@@ -27,11 +27,18 @@ class Hotdeal {
     required this.outOfStock,
     required this.isActive,
     required this.productUrl,
-    required this.categoryId,
+    this.categoryId,
     required this.isSuperHotdeal,
   });
 
   factory Hotdeal.fromJson(Map<String, dynamic> json) {
+    int? categoryId;
+    if (json['isSuperHotdeal'] == true) {
+      categoryId = null;
+    } else {
+      categoryId = json['categoryId'];
+    }
+
     return Hotdeal(
       id: json['id'] ?? 0,
       basePrice: json['basePrice'] ?? 0,
@@ -45,7 +52,7 @@ class Hotdeal {
       outOfStock: json['outOfStock'] ?? false,
       isActive: json['isActive'] ?? false,
       productUrl: json['productUrl'] ?? '',
-      categoryId: json['categoryId'] ?? 0,
+      categoryId: categoryId,
       isSuperHotdeal: json['isSuperHotdeal'] ?? false,
     );
   }
