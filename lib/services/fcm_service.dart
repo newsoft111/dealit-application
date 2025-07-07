@@ -134,8 +134,8 @@ class FCMService {
         // 토큰을 로컬에 저장
         await _saveFCMToken(_fcmToken!);
         
-        // 서버에 토큰 전송
-        await _sendTokenToServer(_fcmToken!);
+        // 서버에 토큰 전송 (비동기로 처리하여 앱이 멈추지 않도록)
+        _sendTokenToServer(_fcmToken!);
       }
     } catch (e) {
       print('FCM 토큰 가져오기 오류: $e');
@@ -156,7 +156,15 @@ class FCMService {
   // 서버에 토큰 전송
   Future<void> _sendTokenToServer(String token) async {
     try {
-      bool success = await ApiService.sendFCMToken(token);
+      // 타임아웃 설정 (5초)
+      bool success = await ApiService.sendFCMToken(token).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          print('서버 토큰 전송 타임아웃');
+          return false;
+        },
+      );
+      
       if (success) {
         print('서버에 FCM 토큰을 성공적으로 전송했습니다.');
       } else {

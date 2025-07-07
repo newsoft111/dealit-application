@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:dealit_app/models/hotdeal.dart';
@@ -129,6 +130,12 @@ class ApiService {
           'platform': 'android', // 또는 'ios'
           'appVersion': '1.0.0', // 앱 버전 정보
         }),
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('FCM 토큰 전송 타임아웃');
+          throw TimeoutException('FCM 토큰 전송 타임아웃');
+        },
       );
       
       print('FCM 토큰 전송 응답: ${response.statusCode}');

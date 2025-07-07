@@ -1,7 +1,7 @@
 name: dealit_app
 description: 쿠팡 핫딜 가격 추적 서비스
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
