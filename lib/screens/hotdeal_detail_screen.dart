@@ -88,35 +88,40 @@ class _HotdealDetailScreenState extends State<HotdealDetailScreen> {
         ),
         title: const Text('상품 상세'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Stack(
         children: [
-          if (hotdeal!.thumbnail.isNotEmpty)
-            Container(
-              width: double.infinity,
-              height: 200,
-              margin: const EdgeInsets.only(bottom: 16),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: CachedNetworkImage(
-                  imageUrl: hotdeal!.thumbnail.startsWith('http') 
-                      ? hotdeal!.thumbnail 
-                      : 'https://cdn.dealit.shop${hotdeal!.thumbnail}',
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey[200],
-                    child: const Center(child: CircularProgressIndicator()),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.error),
+          ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (hotdeal!.thumbnail.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  height: 200,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: CachedNetworkImage(
+                      imageUrl: hotdeal!.thumbnail.startsWith('http') 
+                          ? hotdeal!.thumbnail 
+                          : 'https://cdn.dealit.shop${hotdeal!.thumbnail}',
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: Colors.grey[200],
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.error),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          _buildProductSection(),
-          const SizedBox(height: 32),
-          if (priceChart.isNotEmpty) _buildPriceChart(),
+              _buildProductSection(),
+              const SizedBox(height: 32),
+              if (priceChart.isNotEmpty) _buildPriceChart(),
+            ],
+          ),
+          if (!hotdeal!.isActive) _buildExpiredOverlay(),
         ],
       ),
     );
@@ -270,6 +275,28 @@ class _HotdealDetailScreenState extends State<HotdealDetailScreen> {
           ),
         ],
         lineTouchData: LineTouchData(enabled: false),
+      ),
+    );
+  }
+
+  Widget _buildExpiredOverlay() {
+    return Positioned(
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      child: Container(
+        color: Colors.black.withOpacity(0.5),
+        child: const Center(
+          child: Text(
+            '핫딜마감',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
       ),
     );
   }
